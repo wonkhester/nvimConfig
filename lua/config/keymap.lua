@@ -1,7 +1,7 @@
 local map = vim.keymap.set
 
 map("n", "<leader>pv", function() vim.cmd.Ex() end)
-
+map("n", "<leader>u", function() vim.cmd.UndotreeToggle() end)
 
 local builtin = require('telescope.builtin')
 
