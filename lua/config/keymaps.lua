@@ -35,24 +35,3 @@ map("n", "<leader>j", "<cmd>lprev<CR>zz")
 
 map("n", "<leader>s", ":%s/\\<<C-r><C-w>\\>/<C-r><C-w>/gI<left><left><left>")
 map("n", "<leader>x", "<cmd>!chmod +x %<CR>", { silent = true })
-
-
-local builtin = require('telescope.builtin')
-
-map('n', '<leader>pf', builtin.find_files, {})
-map('n', '<C-p>', builtin.git_files, {})
-map('n', '<leader>ps', function()
-	builtin.grep_string({ search = vim.fn.input("Grep > ") })
-end)
-
-
-local mark = require("harpoon.mark")
-local ui = require("harpoon.ui")
-
-map("n", "<leader>a", mark.add_file)
-map("n", "<C-e>", ui.toggle_quick_menu)
-
-map("n", "<C-h>", function() ui.nav_file(1) end)
-map("n", "<C-t>", function() ui.nav_file(2) end)
-map("n", "<C-n>", function() ui.nav_file(3) end)
-map("n", "<C-s>", function() ui.nav_file(4) end)
