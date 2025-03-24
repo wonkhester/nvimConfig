@@ -6,7 +6,20 @@ return {
     },
     config = function()
         require('nvim-treesitter.configs').setup {
-            ensure_installed = "all",
+            ensure_installed = {
+                -- Web Development & Frameworks
+                "html", "css", "javascript", "typescript", "tsx", "json", "graphql",
+                "vue", "svelte", "astro", "angular",
+
+                -- Backend & General Purpose
+                "python", "lua", "go", "rust", "java", "c", "cpp", "c_sharp", "kotlin", "dart",
+
+                -- Scripting & Shell
+                "bash", "vim", "vimdoc", "yaml", "toml", "perl", "ruby", "php",
+
+                -- Database & Markup
+                "sql", "markdown", "markdown_inline", "xml", "dockerfile",
+            },
             highlight = { enable = true },
             sync_install = false,
             auto_install = true,
