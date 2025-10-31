@@ -86,17 +86,28 @@ return {
         },
         config = function(_, opts)
             -- Setup Mason & LSPConfig
+            local lspconfig = vim.lsp._config or require("lspconfig")  -- fallback for backward compatibility
+
             require("mason").setup()
             require("mason-lspconfig").setup({
                 ensure_installed = opts.ensure_installed,
                 automatic_installation = true,
+                handlers = {
+                    function(server_name)
+                        -- Get default config from vim.lsp.config (Neovim 0.11+) or lspconfig (older)
+                        local cfg = (vim.lsp.config and vim.lsp.config[server_name])
+                        or (lspconfig and lspconfig[server_name])
+
+                        if cfg and cfg.setup then
+                            cfg.setup(opts.servers[server_name] or {})
+                        else
+                            -- fallback if the server isn't pre-registered yet
+                            require("lspconfig")[server_name].setup(opts.servers[server_name] or {})
+                        end
+                    end,
+                },
             })
-
-            local lspconfig = require("lspconfig")
-            for server, config in pairs(opts.servers) do
-                lspconfig[server].setup(config)
-            end
-
+ 
             -- Set keymaps
             for _, map in ipairs(opts.keymaps) do
                 vim.keymap.set(map.mode, map.key, map.action, { desc = map.desc })
