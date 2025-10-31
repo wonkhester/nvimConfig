@@ -1,121 +1,68 @@
 return {
     {
-        "VonHeikemen/lsp-zero.nvim",
+        "neovim/nvim-lspconfig",
         dependencies = {
-            -- LSP Support
-            "neovim/nvim-lspconfig",
             "williamboman/mason.nvim",
             "williamboman/mason-lspconfig.nvim",
-
-            -- Autocompletion
             "hrsh7th/nvim-cmp",
             "hrsh7th/cmp-nvim-lsp",
             "hrsh7th/cmp-buffer",
             "hrsh7th/cmp-path",
             "saadparwaiz1/cmp_luasnip",
-
-            -- Snippets
             "L3MON4D3/LuaSnip",
         },
-        opts = {
-            ensure_installed = {
-                -- Web Development
-                "ts_ls", "volar", "angularls", "tailwindcss", "emmet_ls", "html", "cssls", "jsonls", "graphql", "intelephense",
 
-                -- System Programming
-                "clangd", "rust_analyzer", "gopls",
+        config = function()
+            local mason = require("mason")
+            local mason_lspconfig = require("mason-lspconfig")
+            local cmp = require("cmp")
 
-                -- Backend & Enterprise
-                "pyright", "jdtls", "kotlin_language_server", "omnisharp", "solargraph",
+            mason.setup()
 
-                -- DevOps & Infrastructure
-                "dockerls", "terraformls", "yamlls",
+            local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
-                -- Scripting & Miscellaneous
-                "lua_ls", "bashls", "marksman", "vimls"
-            },
-            servers = {
-                ts_ls = {},
-                volar = {},
-                angularls = {},
-                tailwindcss = {},
-                emmet_ls = {},
-                html = {},
-                cssls = {},
-                jsonls = {},
-                graphql = {},
-                intelephense = {},
-                clangd = {},
-                rust_analyzer = {},
-                gopls = {},
-                pyright = {},
-                jdtls = {},
-                kotlin_language_server = {},
-                omnisharp = {},
-                solargraph = {},
-                dockerls = {},
-                terraformls = {},
-                yamlls = {},
-                lua_ls = {},
-                bashls = {},
-                marksman = {},
-                vimls = {},
-            },
-            keymaps = {
-                { mode = "n", key = "gd", action = vim.lsp.buf.definition, desc = "Go to definition" },
-                { mode = "n", key = "K", action = vim.lsp.buf.hover, desc = "Hover" },
-                { mode = "n", key = "<leader>rn", action = vim.lsp.buf.rename, desc = "Rename symbol" },
-            },
-            set_preferences = {
-                sign_icons = {}       -- Customize diagnostic icons if needed
-            },
-            on_attach = function(client, bufnr)
-                local opts = { buffer = bufnr, remap = false }
-                -- LSP keymaps (navigation, code actions, etc.)
-                vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
-                vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
-                vim.keymap.set("n", "<leader>vws", vim.lsp.buf.workspace_symbol, opts)
-                vim.keymap.set("n", "<leader>vd", vim.diagnostic.open_float, opts)
-                vim.keymap.set("n", "[d", vim.diagnostic.goto_next, opts)
-                vim.keymap.set("n", "]d", vim.diagnostic.goto_prev, opts)
-                vim.keymap.set("n", "<leader>vca", vim.lsp.buf.code_action, opts)
-                vim.keymap.set("n", "<leader>vrr", vim.lsp.buf.references, opts)
-                vim.keymap.set("n", "<leader>vrn", vim.lsp.buf.rename, opts)
-                vim.keymap.set("i", "<C-h>", vim.lsp.buf.signature_help, opts)
-            end,
-        },
-        config = function(_, opts)
-            -- Setup Mason & LSPConfig
-            local lspconfig = vim.lsp._config or require("lspconfig")  -- fallback for backward compatibility
+            local on_attach = function(_, bufnr)
+                local map = function(mode, lhs, rhs, desc)
+                    vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, desc = desc })
+                end
 
-            require("mason").setup()
-            require("mason-lspconfig").setup({
-                ensure_installed = opts.ensure_installed,
+                map("n", "gd", vim.lsp.buf.definition, "Go to definition")
+                map("n", "K", vim.lsp.buf.hover, "Hover docs")
+                map("n", "<leader>rn", vim.lsp.buf.rename, "Rename symbol")
+                map("n", "<leader>ca", vim.lsp.buf.code_action, "Code Action")
+                map("n", "[d", vim.diagnostic.goto_prev, "Prev Diagnostic")
+                map("n", "]d", vim.diagnostic.goto_next, "Next Diagnostic")
+                map("n", "<leader>vd", vim.diagnostic.open_float, "Show Diagnostic")
+            end
+
+            mason_lspconfig.setup({
+                ensure_installed = {
+                    "ts_ls", "volar", "angularls", "tailwindcss", "emmet_ls",
+                    "html", "cssls", "jsonls", "graphql", "intelephense",
+                    "clangd", "rust_analyzer", "gopls",
+                    "pyright", "jdtls", "kotlin_language_server", "omnisharp", "solargraph",
+                    "dockerls", "terraformls", "yamlls",
+                    "lua_ls", "bashls", "marksman", "vimls",
+                },
                 automatic_installation = true,
+
                 handlers = {
                     function(server_name)
-                        -- Get default config from vim.lsp.config (Neovim 0.11+) or lspconfig (older)
-                        local cfg = (vim.lsp.config and vim.lsp.config[server_name])
-                        or (lspconfig and lspconfig[server_name])
-
-                        if cfg and cfg.setup then
-                            cfg.setup(opts.servers[server_name] or {})
-                        else
-                            -- fallback if the server isn't pre-registered yet
-                            require("lspconfig")[server_name].setup(opts.servers[server_name] or {})
-                        end
+                        vim.lsp.config[server_name] = {
+                            on_attach = on_attach,
+                            capabilities = capabilities,
+                        }
+                        vim.lsp.start(vim.lsp.config[server_name])
                     end,
                 },
             })
- 
-            -- Set keymaps
-            for _, map in ipairs(opts.keymaps) do
-                vim.keymap.set(map.mode, map.key, map.action, { desc = map.desc })
-            end
 
-            -- Setup Auto-Completion
-            local cmp = require("cmp")
             cmp.setup({
+                snippet = {
+                    expand = function(args)
+                        require("luasnip").lsp_expand(args.body)
+                    end,
+                },
                 mapping = {
                     ["<C-p>"] = cmp.mapping.select_prev_item(),
                     ["<C-n>"] = cmp.mapping.select_next_item(),
@@ -124,9 +71,9 @@ return {
                 },
                 sources = cmp.config.sources({
                     { name = "nvim_lsp" },
+                    { name = "luasnip" },
                     { name = "buffer" },
                     { name = "path" },
-                    { name = "luasnip" },
                 }),
             })
         end,
